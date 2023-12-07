@@ -101,6 +101,24 @@ public class Main {
 
                 String method = jsonObject.getString("method");
 
+                AndroidConfig scopedAndroidConfigHigh = androidConfigHigh;
+                AndroidConfig scopedAndroidConfigLow = androidConfigLow;
+
+                long unix = System.currentTimeMillis() / 1000L;
+                unix += 28 * 24 * 3600L;
+
+                // json might have TTL
+                if (jsonObject.has("ttl")) {
+                    long ttl = jsonObject.getLong("ttl");
+                    scopedAndroidConfigHigh = AndroidConfig.builder()
+                            .setPriority(AndroidConfig.Priority.HIGH).setTtl(ttl * 1000L).build();
+                    scopedAndroidConfigLow = AndroidConfig.builder()
+                            .setPriority(AndroidConfig.Priority.NORMAL).setTtl(ttl * 1000L).build();
+
+                    unix = System.currentTimeMillis() / 1000L;
+                    unix += ttl;
+                }
+
                 switch (method) {
                     case "exit":
                         break outerLoop;
@@ -163,7 +181,7 @@ public class Main {
                                     .putData("type", type)
                                     .putAllData(dataMap)
                                     .addAllTokens(tokenSubset)
-                                    .setAndroidConfig(androidConfigHigh)
+                                    .setAndroidConfig(scopedAndroidConfigHigh)
                                     .build();
 
                             // Get the response
@@ -179,9 +197,6 @@ public class Main {
                             }
                             System.out.println("Sent " + (tokenSubset.size() - response.getFailureCount()) + " ANDROID message(s)" + (tokenSubset.size() - response.getFailureCount() == 1 ? "" : "s") + " to " + tokenSubset.size() + " token" + (tokenSubset.size() == 1 ? "" : "s"));
                         }
-
-                        long unix = System.currentTimeMillis() / 1000L;
-                        unix += 28 * 24 * 3600;
 
                         ApnsConfig iosConfigLow = ApnsConfig.builder()
                                 .setAps(Aps.builder().setContentAvailable(true).build())
@@ -206,7 +221,7 @@ public class Main {
                                     .putData("type", type)
                                     .putAllData(dataMap)
                                     .addAllTokens(tokenSubset)
-                                    .setAndroidConfig(androidConfigLow)
+                                    .setAndroidConfig(scopedAndroidConfigLow)
                                     .setApnsConfig(iosConfigLow)
                                     .build();
 
@@ -298,7 +313,12 @@ public class Main {
                         }
 
                         Message message = Message.builder()
-                                .setAndroidConfig(androidConfigHigh)
+                                .setAndroidConfig(scopedAndroidConfigLow)
+                                .setApnsConfig(ApnsConfig.builder()
+                                        .setAps(Aps.builder().setContentAvailable(true).build())
+                                        .putHeader("apns-priority", "5")
+                                        .putHeader("apns-expiration", String.valueOf(unix))
+                                        .build())
                                 .putAllData(dataMap2)
                                 .setTopic(topic)
                                 .build();
