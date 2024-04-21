@@ -15,7 +15,7 @@ repositories {
 
 jar {
     manifest {
-        attributes "Main-Class": "de.hbvjena90.Main"
+        attributes "Main-Class": "de.jena.feuerwehr.app.fcm.Main"
     }
 
     duplicatesStrategy(DuplicatesStrategy.INCLUDE)
@@ -24,13 +24,12 @@ jar {
         configurations.runtimeClasspath.collect { it.isDirectory() ? it : zipTree(it) }
     }
 
-    // set build path to "C:\Users\matth\Server-Files\HBV-Jena-90-SERVER-Dart\FCMService.jar"
-    destinationDirectory = file("C:\\Users\\matth\\Server-Files\\HBV-Jena-90-SERVER-Dart")
+    destinationDirectory = file("/home/konstanius/Documents/FF-Alarm-FCM-Java/FCMService.jar")
 }
 
 dependencies {
     implementation 'com.google.firebase:firebase-admin:9.1.1'
-    implementation 'org.json:json:20230227'
+    implementation 'org.json:json:20231013'
 }
 
 test {
